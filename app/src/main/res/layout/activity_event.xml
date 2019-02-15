@@ -33,6 +33,19 @@
         android:id="@+id/tv_qr_code_text_content"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"/>
+        android:layout_gravity="bottom" />
+
+    <ListView
+        android:id="@+id/listView"
+        android:layout_width="wrap_content"
+        android:layout_height="350dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="80dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginRight="20dp"
+        android:background="@drawable/custom_shape"
+        android:elevation="10dp"
+        android:transcriptMode="alwaysScroll"/>
 
 </android.support.design.widget.CoordinatorLayout>

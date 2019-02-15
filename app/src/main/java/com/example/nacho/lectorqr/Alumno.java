@@ -4,9 +4,14 @@ public class Alumno {
     private String nombre;
     private String apellido;
     private String dni;
-    private long numeroExpediente;
+    private String numeroExpediente;
+    private String titulacion;
 
-    public Alumno(String nombre, String apellido, String dni, long numeroExpediente) {
+    public Alumno(){
+
+    }
+
+    public Alumno(String nombre, String apellido, String dni, String numeroExpediente) {
         this.nombre = nombre;
         this.apellido = apellido;
         this.dni = dni;
@@ -25,7 +30,7 @@ public class Alumno {
         return dni;
     }
 
-    public long getNumeroExpediente() {
+    public String getNumeroExpediente() {
         return numeroExpediente;
     }
 
@@ -41,7 +46,12 @@ public class Alumno {
         this.dni = dni;
     }
 
-    public void setNumeroExpediente(long numeroExpediente) {
+    public void setNumeroExpediente(String numeroExpediente) {
         this.numeroExpediente = numeroExpediente;
     }
+
+    public String getTitulacion(){ return titulacion; }
+
+    public void setTitulacion(String titulacion){ this.titulacion = titulacion; }
+
 }

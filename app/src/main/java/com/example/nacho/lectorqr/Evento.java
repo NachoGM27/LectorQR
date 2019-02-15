@@ -1,13 +1,15 @@
 package com.example.nacho.lectorqr;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Evento {
     private long id;
     private String nombre;
-    private List<Alumno> lista;
+    private List<Alumno> listaAlumnos;
 
     public Evento() {
+        listaAlumnos = new ArrayList<>();
     }
 
     public long getId() {
@@ -19,7 +21,7 @@ public class Evento {
     }
 
     public List<Alumno> getLista() {
-        return lista;
+        return listaAlumnos;
     }
 
     public void setId(long id) {
@@ -30,7 +32,7 @@ public class Evento {
         this.nombre = nombre;
     }
 
-    public void setLista(List<Alumno> lista) {
-        this.lista = lista;
+    public void setLista(List<Alumno> listaAlumnos) {
+        this.listaAlumnos = listaAlumnos;
     }
 }
