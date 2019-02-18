@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -14,7 +13,6 @@ import android.view.View;
 import android.widget.ImageButton;
 
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.example.nacho.lectorqr.barcode.BarcodeCaptureActivity;
 import com.google.android.gms.common.api.CommonStatusCodes;
@@ -42,14 +40,18 @@ public class EventActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("Titulo");
         setSupportActionBar(toolbar);
 
         //-----------------DESDE AQUI ES MIO----------------------
 
+
+        //evento = (Evento) getIntent().getSerializableExtra("evento");
+
         evento = new Evento();
         lista = evento.getLista();
+
 
         adapter = new CustomAdapter(lista, this);
 
@@ -68,17 +70,18 @@ public class EventActivity extends AppCompatActivity {
                 startActivityForResult(intent, BARCODE_READER_REQUEST_CODE);
             }
         });
+
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("evento", evento); //NO FUNCIONA
+        startActivity(intent);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data){
-        TextView tv_qr_code_text_content = findViewById(R.id.tv_qr_code_text_content);
         if (requestCode == BARCODE_READER_REQUEST_CODE) {
             if (resultCode == CommonStatusCodes.SUCCESS) {
                 if (data != null) {
                     Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
-                    Point[] p = barcode.cornerPoints;
-                    tv_qr_code_text_content.setText(barcode.displayValue);
 
                     String nombre = barcode.displayValue;
                     String apellidos = barcode.displayValue;
@@ -86,9 +89,10 @@ public class EventActivity extends AppCompatActivity {
                     String expediente = barcode.displayValue;
                     String titulacion = barcode.displayValue;
 
-                    popUp( nombre, apellidos, dni, expediente, titulacion).show();
-                } else
-                    tv_qr_code_text_content.setText(R.string.no_barcode_captured);
+                    Dialog popUp = popUp(nombre, apellidos, dni, expediente, titulacion);
+                    popUp.setCanceledOnTouchOutside(false);
+                    popUp.show();
+                }
             }else
                 Log.e("EventActivity:", String.format(getString(R.string.barcode_error_format) + CommonStatusCodes.getStatusCodeString(resultCode)));
         }else super.onActivityResult(requestCode, resultCode, data);

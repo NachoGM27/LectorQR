@@ -1,9 +1,10 @@
 package com.example.nacho.lectorqr;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Evento {
+public class Evento implements Serializable {
     private long id;
     private String nombre;
     private List<Alumno> listaAlumnos;
