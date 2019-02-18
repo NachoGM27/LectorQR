@@ -1,14 +1,17 @@
 package com.example.nacho.lectorqr;
 
+import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 
@@ -43,6 +46,7 @@ public class EventActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("Titulo");
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         //-----------------DESDE AQUI ES MIO----------------------
 
@@ -71,9 +75,6 @@ public class EventActivity extends AppCompatActivity {
             }
         });
 
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra("evento", evento); //NO FUNCIONA
-        startActivity(intent);
     }
 
     @Override
@@ -103,6 +104,19 @@ public class EventActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch (item.getItemId()){
+            case android.R.id.home:
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.putExtra("evento", evento); //NO FUNCIONA
+                startActivity(intent);
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     //---------------POPUP---------------------

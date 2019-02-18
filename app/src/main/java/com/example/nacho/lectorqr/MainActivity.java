@@ -30,12 +30,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        Evento evento = (Evento) getIntent().getSerializableExtra("evento"); //NO FUNCIONA
+        /*Evento evento = (Evento) getIntent().getSerializableExtra("evento"); //NO FUNCIONA
 
         if (evento != null) {
             TextView textView = findViewById(R.id.text);
             textView.setText(evento.getLista().get(1).getNombre());
-        }
+        }*/
 
         /*Button button = findViewById(R.id.boton);
         button.setOnClickListener(new View.OnClickListener() {

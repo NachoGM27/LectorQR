@@ -27,7 +27,11 @@
             android:name=".EventActivity"
             android:label="@string/title_activity_event"
             android:theme="@style/AppTheme.NoActionBar"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.nacho.lectorqr.MainActivity"></meta-data>
+        </activity>
         <activity
             android:name=".barcode.BarcodeCaptureActivity"
             android:theme="@style/AppTheme.NoActionBar"
