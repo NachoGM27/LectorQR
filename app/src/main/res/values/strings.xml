@@ -2,8 +2,10 @@
     <string name="app_name">LectorQR</string>
     <string name="title_activity_event">EventActivity</string>
     <string name="pop_up_title">¿Añadir este alumno?</string>
+    <string name="borrar">Borrar</string>
 
     <string name="guardar">Guardar</string>
+    <string name="crear">Crear</string>
     <string name="cancelar">Cancelar</string>
     <string name="ok">ok</string>
 

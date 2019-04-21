@@ -1,10 +1,10 @@
 package com.example.nacho.lectorqr;
 
-import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -13,10 +13,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageButton;
-
 import android.widget.ListView;
 
+import com.example.nacho.lectorqr.DAO.AlumnoDAO;
+import com.example.nacho.lectorqr.DAO.DAOAlumnoAdaptador;
 import com.example.nacho.lectorqr.barcode.BarcodeCaptureActivity;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.vision.barcode.Barcode;
@@ -28,8 +30,10 @@ public class EventActivity extends AppCompatActivity {
     private int BARCODE_READER_REQUEST_CODE = 1;
 
     private Evento evento;
+    private Bundle datosRecogidos;
     private List<Alumno> lista;
-    private static CustomAdapter adapter;
+    private AlumnoDAO dao;
+    private DAOAlumnoAdaptador adaptadorDAO;
 
     ListView listView;
 
@@ -38,6 +42,11 @@ public class EventActivity extends AppCompatActivity {
     String linea3 ="DNI: ";
     String linea4 ="Expediente: ";
     String linea5 ="Titulación: ";
+
+
+    private boolean elementoSeleccionado = false;
+    private View previousView ;
+    private int posicionSeleccionado ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,23 +57,31 @@ public class EventActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        //-----------------DESDE AQUI ES MIO----------------------
+        datosRecogidos = getIntent().getExtras();
+        evento = (Evento) datosRecogidos.getSerializable("evento");
+        toolbar.setTitle(evento.getNombre());
 
+        dao = new AlumnoDAO(this);
+        lista = dao.verTodos(evento.getId());
 
-        //evento = (Evento) getIntent().getSerializableExtra("evento");
-
-        evento = new Evento();
-        lista = evento.getLista();
-
-
-        adapter = new CustomAdapter(lista, this);
+        adaptadorDAO = new DAOAlumnoAdaptador(lista, this, dao);
 
         listView = findViewById(R.id.listView);
-        listView.setAdapter(adapter);
+        listView.setAdapter(adaptadorDAO);
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                if(previousView != null) {
+                    previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
+                }
+                elementoSeleccionado = true;
+                view.setBackgroundColor(Color.parseColor("#cecece"));
+                previousView = view;
+                posicionSeleccionado = position;
+                return true;
+            }
+        });
 
-        evento.setNombre("Prueba");
-
-        toolbar.setTitle(evento.getNombre());
 
         ImageButton btn_scan_qrcode = findViewById(R.id.btn_scan_qrcode);
         btn_scan_qrcode.setOnClickListener(new View.OnClickListener() {
@@ -111,30 +128,58 @@ public class EventActivity extends AppCompatActivity {
         switch (item.getItemId()){
             case android.R.id.home:
                 Intent intent = new Intent(this, MainActivity.class);
-                intent.putExtra("evento", evento); //NO FUNCIONA
                 startActivity(intent);
                 NavUtils.navigateUpFromSameTask(this);
+                return true;
+            case R.id.delete:
+                final Alumno alumno = lista.get(posicionSeleccionado);
+                elementoSeleccionado = false;
+                previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
+
+                AlertDialog.Builder deletePopUp = new AlertDialog.Builder(this);
+                deletePopUp.setTitle("¿Seguro que quieres borrar este alumno de este evento?").setMessage("Alumno " + alumno.getNombre() + " " + alumno.getApellido() + " con dni " + alumno.getDni())
+                        .setCancelable(false).setPositiveButton("Eliminar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dao.eliminar(alumno.getId());
+                        lista=dao.verTodos(evento.getId());
+                        adaptadorDAO.notifyDataSetChanged();
+                    }
+                }).setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                deletePopUp.show();
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    //---------------POPUP---------------------
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        invalidateOptionsMenu();
+        if(elementoSeleccionado){
+            menu.findItem(R.id.delete).setVisible(true);
+        } else{
+            menu.findItem(R.id.delete).setVisible(false);
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
 
     public Dialog popUp(String nombre, String apellidos, String dni, String expediente, String titulacion){
-            final Alumno alumno = new Alumno();
-            alumno.setNombre(nombre);
-            alumno.setApellido(apellidos);
-            alumno.setDni("99999999A");
-            alumno.setNumeroExpediente("9999");
-            // Use the Builder class for convenient dialog construction
+            final Alumno alumno = new Alumno(nombre, apellidos, "99999999A", "9999", evento.getId());
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.pop_up_title)
                     .setMessage(linea1 + nombre + "\n" + linea2 + apellidos  + "\n" + linea3 + dni + "\n" + linea4 + expediente + "\n" + linea5 + titulacion )
                     .setPositiveButton(R.string.guardar, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            lista.add(alumno);
-                            adapter.notifyDataSetChanged();
+                            dao.insertar(alumno);
+
+                            lista = dao.verTodos(evento.getId());
+                            adaptadorDAO.notifyDataSetChanged();
 
                             dialog.dismiss();
                         }
