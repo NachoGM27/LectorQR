@@ -23,6 +23,13 @@ import com.example.nacho.lectorqr.barcode.BarcodeCaptureActivity;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.vision.barcode.Barcode;
 
+import org.jsoup.Connection;
+import org.jsoup.Connection.Response;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
+import java.io.IOException;
 import java.util.List;
 
 public class EventActivity extends AppCompatActivity {
@@ -42,6 +49,8 @@ public class EventActivity extends AppCompatActivity {
     String linea3 ="DNI: ";
     String linea4 ="Expediente: ";
     String linea5 ="Titulación: ";
+
+    private String text;
 
 
     private boolean elementoSeleccionado = false;
@@ -99,21 +108,85 @@ public class EventActivity extends AppCompatActivity {
         if (requestCode == BARCODE_READER_REQUEST_CODE) {
             if (resultCode == CommonStatusCodes.SUCCESS) {
                 if (data != null) {
+
+                    Bundle bundle = data.getExtras();
+
                     Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
 
-                    String nombre = barcode.displayValue;
-                    String apellidos = barcode.displayValue;
-                    String dni = barcode.displayValue;
-                    String expediente = barcode.displayValue;
-                    String titulacion = barcode.displayValue;
+                    recogerInfo(barcode);
 
-                    Dialog popUp = popUp(nombre, apellidos, dni, expediente, titulacion);
-                    popUp.setCanceledOnTouchOutside(false);
-                    popUp.show();
                 }
             }else
                 Log.e("EventActivity:", String.format(getString(R.string.barcode_error_format) + CommonStatusCodes.getStatusCodeString(resultCode)));
         }else super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void recogerInfo(Barcode barcode) {
+
+        //Cogemos la url que nos da el codigo qr
+        final String url = barcode.displayValue;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                Integer codigo = 0;
+                final StringBuilder result = new StringBuilder();
+
+                //Comprobamos que nos podemos conectar a ella
+                codigo = getStatusConnectionCode(url);
+
+                if(codigo == 200){
+                    Document doc = null;
+                    try {
+                        doc = Jsoup.connect(url).userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.2 (KHTML, like Gecko) Chrome/15.0.874.120 Safari/535.2").timeout(100000).get();
+                        Element nombreUsuario = doc.getElementById("usuario_valor");
+                        if(nombreUsuario.text().trim() == ""){
+                            result.append("Nombre de usuario vacio");
+                        }else{
+                            result.append(nombreUsuario.text());
+                        }
+                    } catch (IOException ex) {
+                        Log.e("HTMLError", "Excepción al obtener el HTML de la página" + ex.getMessage());
+                    }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Dialog popUp = popUp(result.toString(), result.toString(), "99999999A", "9999", null);
+                            popUp.setCanceledOnTouchOutside(false);
+                            popUp.show();
+                        }
+                    });
+
+                }else{
+                    Log.e("codigoError:","Codigo de error:" + codigo);
+                }
+
+            }
+        }).start();
+    }
+
+    private Integer getStatusConnectionCode(String url) {
+
+        Connection conn = Jsoup.connect(url).userAgent("Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
+        try {
+            Response resp = conn.execute();
+            if (resp.statusCode() != 200) {
+                System.out.println("Error: "+resp.statusCode());
+                return resp.statusCode();
+            }else{
+                System.out.println(Thread.currentThread().getName()+" is downloading "+ url);
+                return resp.statusCode();
+            }
+        }catch(IOException e) {
+            System.out.println(e.getStackTrace());
+            System.out.println(Thread.currentThread().getName()+"No puedo conectar con  "+ url + e);
+            System.out.println("No se puede conectar");
+            return -1;
+        }
+
+
     }
 
     @Override

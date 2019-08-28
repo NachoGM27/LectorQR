@@ -168,6 +168,23 @@ public class MainActivity extends AppCompatActivity {
                 });
                 deletePopUp.show();
                 return true;
+            case R.id.save:
+                evento = listaEventos.get(posicionSeleccionado);
+                elementoSeleccionado = false;
+                previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
+
+                List<Alumno> listaAlumnos = alumno_dao.verTodos(evento.getId());
+                String content = "";
+                for(Alumno aux: listaAlumnos){
+                    content.concat(aux.getNombre() + ", ");
+                    //alumno_dao.eliminar(aux.getId());
+                }
+               // saveText(evento.getNombre(), content);
+
+                /*evento_dao.eliminar(evento.getId());
+                listaEventos=evento_dao.verTodos();
+                adaptador.notifyDataSetChanged();*/
+                return true;
             case android.R.id.home:
                 elementoSeleccionado = false;
                 previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
@@ -182,12 +199,33 @@ public class MainActivity extends AppCompatActivity {
         invalidateOptionsMenu();
         if(elementoSeleccionado){
             menu.findItem(R.id.delete).setVisible(true);
+            menu.findItem(R.id.save).setVisible(true);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         } else{
             menu.findItem(R.id.delete).setVisible(false);
+            menu.findItem(R.id.save).setVisible(false);
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
         return super.onPrepareOptionsMenu(menu);
     }
+
+    /*public void saveText(String nombreEvento, String content){
+        String fileName = nombreEvento + ".txt";
+
+        //crear el archivo
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
+
+        //escribir el archivo
+        try {
+            file.createNewFile();
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(content.getBytes());
+            fos.close();
+            Toast.makeText(this, "Evento guardado", Toast.LENGTH_SHORT).show();
+        } catch(Exception e){
+            e.printStackTrace();
+            Toast.makeText(this, "Error al guardar", Toast.LENGTH_SHORT).show();
+        }
+    }*/
 
 }
