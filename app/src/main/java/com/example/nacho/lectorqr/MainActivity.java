@@ -1,11 +1,14 @@
 package com.example.nacho.lectorqr;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -22,6 +25,8 @@ import com.example.nacho.lectorqr.DAO.AlumnoDAO;
 import com.example.nacho.lectorqr.DAO.DAOAdaptador;
 import com.example.nacho.lectorqr.DAO.EventoDAO;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -139,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
         switch (item.getItemId()){
@@ -174,16 +180,16 @@ public class MainActivity extends AppCompatActivity {
                 previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
 
                 List<Alumno> listaAlumnos = alumno_dao.verTodos(evento.getId());
-                String content = "";
+                StringBuilder content = new StringBuilder();
                 for(Alumno aux: listaAlumnos){
-                    content.concat(aux.getNombre() + ", ");
-                    //alumno_dao.eliminar(aux.getId());
+                    content.append(aux.getNombre() + "\n");
+                    alumno_dao.eliminar(aux.getId());
                 }
-               // saveText(evento.getNombre(), content);
+                saveText(evento.getNombre(), content);
 
-                /*evento_dao.eliminar(evento.getId());
+                evento_dao.eliminar(evento.getId());
                 listaEventos=evento_dao.verTodos();
-                adaptador.notifyDataSetChanged();*/
+                adaptador.notifyDataSetChanged();
                 return true;
             case android.R.id.home:
                 elementoSeleccionado = false;
@@ -209,23 +215,33 @@ public class MainActivity extends AppCompatActivity {
         return super.onPrepareOptionsMenu(menu);
     }
 
-    /*public void saveText(String nombreEvento, String content){
-        String fileName = nombreEvento + ".txt";
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void saveText(String nombreEvento, StringBuilder content){
+        if(checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            String fileName = nombreEvento + ".txt";
 
-        //crear el archivo
-        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
+            //crear el archivo
+            File directorio = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
 
-        //escribir el archivo
-        try {
-            file.createNewFile();
-            FileOutputStream fos = new FileOutputStream(file);
-            fos.write(content.getBytes());
-            fos.close();
-            Toast.makeText(this, "Evento guardado", Toast.LENGTH_SHORT).show();
-        } catch(Exception e){
-            e.printStackTrace();
-            Toast.makeText(this, "Error al guardar", Toast.LENGTH_SHORT).show();
+            //escribir el archivo
+            try {
+                if(!directorio.exists()){
+                    directorio.mkdir();
+                }
+                File file = new File(directorio, fileName);
+                file.createNewFile();
+                FileOutputStream fos = new FileOutputStream(file);
+                fos.write(content.toString().getBytes());
+                fos.close();
+                Toast.makeText(this, "Evento guardado en " + directorio.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Error al guardar", Toast.LENGTH_SHORT).show();
+            }
+        }else{
+            String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+            requestPermissions(permissions, 101);
         }
-    }*/
+    }
 
 }
