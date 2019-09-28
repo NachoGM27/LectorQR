@@ -141,10 +141,11 @@ public class EventActivity extends AppCompatActivity {
                     try {
                         doc = Jsoup.connect(url).userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.2 (KHTML, like Gecko) Chrome/15.0.874.120 Safari/535.2").timeout(100000).get();
                         Element nombreUsuario = doc.getElementById("usuario_valor");
-                        if(nombreUsuario.text().trim() == ""){
+
+                        if(nombreUsuario.val().trim() == ""){
                             result.append("Nombre de usuario vacio");
                         }else{
-                            result.append(nombreUsuario.text());
+                            result.append(nombreUsuario.val());
                         }
                     } catch (IOException ex) {
                         Log.e("HTMLError", "Excepción al obtener el HTML de la página" + ex.getMessage());
