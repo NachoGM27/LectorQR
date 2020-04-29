@@ -16,7 +16,7 @@ public class AlumnoDAO {
     List<Alumno> lista = new ArrayList<Alumno>();
     Context context;
     String nombreDB = "DBAlumnos";
-    String tabla = "create table if not exists alumno(id integer primary key autoincrement, nombre text, apellidos text, dni text, expediente text, idEvento integer)";
+    String tabla = "create table if not exists alumno(id integer primary key autoincrement, nombre text, campoExtra1 text default null, campoExtra2 text default null, campoExtra3 text default null, idEvento integer)";
 
     public AlumnoDAO(Context context){
         this.context = context;
@@ -27,9 +27,15 @@ public class AlumnoDAO {
     public boolean insertar(Alumno alumno){
         ContentValues contentValues = new ContentValues();
         contentValues.put("nombre", alumno.getNombre());
-        contentValues.put("apellidos", alumno.getApellido());
-        contentValues.put("dni", alumno.getDni());
-        contentValues.put("expediente", alumno.getNumeroExpediente());
+        if(alumno.getCampoExtra1() != null && !alumno.getCampoExtra1().equals("")){
+            contentValues.put("campoExtra1", alumno.getCampoExtra1());
+        }
+        if(alumno.getCampoExtra2() != null && !alumno.getCampoExtra2().equals("")){
+            contentValues.put("campoExtra2", alumno.getCampoExtra2());
+        }
+        if(alumno.getCampoExtra3() != null && !alumno.getCampoExtra3().equals("")){
+            contentValues.put("campoExtra3", alumno.getCampoExtra3());
+        }
         contentValues.put("idEvento", alumno.getIdEvento());
 
         return (data.insert("alumno", null, contentValues))>0;

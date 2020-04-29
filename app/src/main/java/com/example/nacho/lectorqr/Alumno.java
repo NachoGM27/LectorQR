@@ -5,26 +5,25 @@ import java.io.Serializable;
 public class Alumno implements Serializable {
     private long id;
     private String nombre;
-    private String apellido;
-    private String dni;
-    private String numeroExpediente;
-    private String titulacion;
+    private String campoExtra1;
+    private String campoExtra2;
+    private String campoExtra3;
     private long idEvento;
 
-    public Alumno(long id, String nombre, String apellido, String dni, String numeroExpediente, long idEvento) {
+    public Alumno(long id, String nombre, String campoExtra1, String campoExtra2, String campoExtra3, long idEvento) {
         this.id = id;
         this.nombre = nombre;
-        this.apellido = apellido;
-        this.dni = dni;
-        this.numeroExpediente = numeroExpediente;
+        this.campoExtra1 = campoExtra1;
+        this.campoExtra2 = campoExtra2;
+        this.campoExtra3 = campoExtra3;
         this.idEvento = idEvento;
     }
 
-    public Alumno(String nombre, String apellido, String dni, String numeroExpediente, long idEvento) {
+    public Alumno(String nombre, String campoExtra1, String campoExtra2, String campoExtra3, long idEvento) {
         this.nombre = nombre;
-        this.apellido = apellido;
-        this.dni = dni;
-        this.numeroExpediente = numeroExpediente;
+        this.campoExtra1 = campoExtra1;
+        this.campoExtra2 = campoExtra2;
+        this.campoExtra3 = campoExtra3;
         this.idEvento = idEvento;
     }
 
@@ -40,37 +39,33 @@ public class Alumno implements Serializable {
         return nombre;
     }
 
-    public String getApellido() {
-        return apellido;
-    }
-
-    public String getDni() {
-        return dni;
-    }
-
-    public String getNumeroExpediente() {
-        return numeroExpediente;
-    }
-
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
 
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
+    public String getCampoExtra1() {
+        return campoExtra1;
     }
 
-    public void setDni(String dni) {
-        this.dni = dni;
+    public void setCampoExtra1(String campoExtra1) {
+        this.campoExtra1 = campoExtra1;
     }
 
-    public void setNumeroExpediente(String numeroExpediente) {
-        this.numeroExpediente = numeroExpediente;
+    public String getCampoExtra2() {
+        return campoExtra2;
     }
 
-    public String getTitulacion(){ return titulacion; }
+    public void setCampoExtra2(String campoExtra2) {
+        this.campoExtra2 = campoExtra2;
+    }
 
-    public void setTitulacion(String titulacion){ this.titulacion = titulacion; }
+    public String getCampoExtra3() {
+        return campoExtra3;
+    }
+
+    public void setCampoExtra3(String campoExtra3) {
+        this.campoExtra3 = campoExtra3;
+    }
 
     public long getIdEvento() {
         return idEvento;

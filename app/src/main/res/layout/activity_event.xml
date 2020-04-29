@@ -27,7 +27,7 @@
         android:layout_gravity="bottom|center_horizontal"
         android:layout_marginBottom="30dp"
         app:srcCompat="@drawable/ic_launcher_background"
-        tools:ignore="VectorDrawableCompat"/>
+        tools:ignore="VectorDrawableCompat" />
 
     <ListView
         android:id="@+id/listView"

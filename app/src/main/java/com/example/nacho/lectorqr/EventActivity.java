@@ -10,6 +10,7 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -45,10 +46,9 @@ public class EventActivity extends AppCompatActivity {
     ListView listView;
 
     String linea1 ="Nombre: ";
-    String linea2 ="Apellidos: ";
-    String linea3 ="DNI: ";
-    String linea4 ="Expediente: ";
-    String linea5 ="Titulación: ";
+    String linea2;
+    String linea3;
+    String linea4;
 
     private String text;
 
@@ -68,6 +68,23 @@ public class EventActivity extends AppCompatActivity {
 
         datosRecogidos = getIntent().getExtras();
         evento = (Evento) datosRecogidos.getSerializable("evento");
+
+        if(evento.getCampoExtra1() != null && !evento.getCampoExtra1().equals("")){
+            setLinea2(evento.getCampoExtra1() + ": ");
+        }else{
+            setLinea2("");
+        }
+        if(evento.getCampoExtra2() != null && !evento.getCampoExtra2().equals("")){
+            setLinea3(evento.getCampoExtra2() + ": ");
+        }else{
+            setLinea3("");
+        }
+        if(evento.getCampoExtra3() != null && !evento.getCampoExtra3().equals("")){
+            setLinea4(evento.getCampoExtra3() + ": ");
+        }else{
+            setLinea4("");
+        }
+
         toolbar.setTitle(evento.getNombre());
 
         dao = new AlumnoDAO(this);
@@ -104,6 +121,22 @@ public class EventActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event)  {
+        if(elementoSeleccionado){
+            previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
+            elementoSeleccionado = false;
+            return true;
+        }else if (keyCode == KeyEvent.KEYCODE_BACK ) {
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            NavUtils.navigateUpFromSameTask(this);
+            return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data){
         if (requestCode == BARCODE_READER_REQUEST_CODE) {
             if (resultCode == CommonStatusCodes.SUCCESS) {
@@ -131,7 +164,10 @@ public class EventActivity extends AppCompatActivity {
             public void run() {
 
                 Integer codigo = 0;
-                final StringBuilder result = new StringBuilder();
+                final StringBuilder resultNombreUsuario = new StringBuilder();
+                final StringBuilder resultCampo1 = new StringBuilder();
+                final StringBuilder resultCampo2 = new StringBuilder();
+                final StringBuilder resultCampo3 = new StringBuilder();
 
                 //Comprobamos que nos podemos conectar a ella
                 codigo = getStatusConnectionCode(url);
@@ -143,9 +179,31 @@ public class EventActivity extends AppCompatActivity {
                         Element nombreUsuario = doc.getElementById("usuario_valor");
 
                         if(nombreUsuario.val().trim() == ""){
-                            result.append("Nombre de usuario vacio");
+                            resultNombreUsuario.append("Nombre de usuario vacio");
                         }else{
-                            result.append(nombreUsuario.val());
+                            resultNombreUsuario.append(nombreUsuario.val());
+                        }
+
+                        Element campo1;
+                        if(evento.getCampoExtra1() != null && !evento.getCampoExtra1().equals("")){
+                            campo1 = doc.getElementById(evento.getCampoExtra1());
+                            resultCampo1.append(campo1.val());
+                        }else{
+                            resultCampo1.append("");
+                        }
+                        Element campo2;
+                        if(evento.getCampoExtra2() != null && !evento.getCampoExtra2().equals("")){
+                            campo2 = doc.getElementById(evento.getCampoExtra2());
+                            resultCampo2.append(campo2.val());
+                        }else{
+                            resultCampo2.append("");
+                        }
+                        Element campo3;
+                        if(evento.getCampoExtra3() != null && !evento.getCampoExtra3().equals("")){
+                            campo3 = doc.getElementById(evento.getCampoExtra3());
+                            resultCampo3.append(campo3.val());
+                        }else{
+                            resultCampo3.append("");
                         }
                     } catch (IOException ex) {
                         Log.e("HTMLError", "Excepción al obtener el HTML de la página" + ex.getMessage());
@@ -154,7 +212,7 @@ public class EventActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Dialog popUp = popUp(result.toString(), result.toString(), "99999999A", "9999", null);
+                            Dialog popUp = popUp(resultNombreUsuario.toString(), resultCampo1 != null ? resultCampo1.toString() : null, resultCampo2 != null ? resultCampo2.toString() : null, resultCampo3 != null ? resultCampo3.toString() : null);
                             popUp.setCanceledOnTouchOutside(false);
                             popUp.show();
                         }
@@ -211,7 +269,7 @@ public class EventActivity extends AppCompatActivity {
                 previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
 
                 AlertDialog.Builder deletePopUp = new AlertDialog.Builder(this);
-                deletePopUp.setTitle("¿Seguro que quieres borrar este alumno de este evento?").setMessage("Alumno " + alumno.getNombre() + " " + alumno.getApellido() + " con dni " + alumno.getDni())
+                deletePopUp.setTitle("¿Seguro que quieres borrar este alumno de este evento?").setMessage("Alumno " + alumno.getNombre())
                         .setCancelable(false).setPositiveButton("Eliminar", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -235,6 +293,7 @@ public class EventActivity extends AppCompatActivity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         invalidateOptionsMenu();
+        menu.findItem(R.id.save).setVisible(false);
         if(elementoSeleccionado){
             menu.findItem(R.id.delete).setVisible(true);
         } else{
@@ -243,11 +302,14 @@ public class EventActivity extends AppCompatActivity {
         return super.onPrepareOptionsMenu(menu);
     }
 
-    public Dialog popUp(String nombre, String apellidos, String dni, String expediente, String titulacion){
-            final Alumno alumno = new Alumno(nombre, apellidos, "99999999A", "9999", evento.getId());
+    public Dialog popUp(String nombre, String campo1, String campo2, String campo3){
+            final Alumno alumno = new Alumno(nombre, campo1, campo2, campo3, evento.getId());
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.pop_up_title)
-                    .setMessage(linea1 + nombre + "\n" + linea2 + apellidos  + "\n" + linea3 + dni + "\n" + linea4 + expediente + "\n" + linea5 + titulacion )
+                    .setMessage(linea1 + nombre + "\n" +
+                                ((campo1 != null && !campo1.equals("")) ? (linea2 + campo1 + "\n") : "" + "\n") +
+                                ((campo2 != null && !campo2.equals("")) ? (linea3 + campo2 + "\n") : "" + "\n") +
+                                ((campo3 != null && !campo3.equals("")) ? (linea4 + campo3 + "\n") : "" + "\n"))
                     .setPositiveButton(R.string.guardar, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             dao.insertar(alumno);
@@ -267,6 +329,29 @@ public class EventActivity extends AppCompatActivity {
             return builder.create();
     }
 
+    public String getLinea2() {
+        return linea2;
+    }
+
+    public void setLinea2(String linea2) {
+        this.linea2 = linea2;
+    }
+
+    public String getLinea3() {
+        return linea3;
+    }
+
+    public void setLinea3(String linea3) {
+        this.linea3 = linea3;
+    }
+
+    public String getLinea4() {
+        return linea4;
+    }
+
+    public void setLinea4(String linea4) {
+        this.linea4 = linea4;
+    }
 }
 
 

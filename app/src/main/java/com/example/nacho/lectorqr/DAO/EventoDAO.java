@@ -16,7 +16,7 @@ public class EventoDAO {
     Evento evento;
     Context context;
     String nombreDB = "DBEventos";
-    String tabla = "create table if not exists evento(id integer primary key autoincrement not null, nombre text)";
+    String tabla = "create table if not exists evento(id integer primary key autoincrement not null, nombre text default null, campoExtra1 text default null, campoExtra2 text default null, campoExtra3 text default null)";
 
     public EventoDAO(Context context){
 
@@ -25,12 +25,21 @@ public class EventoDAO {
         data.execSQL(tabla);
     }
 
-    public boolean insertar(Evento evento){
+    public Long insertar(Evento evento){
 
         ContentValues contenedor = new ContentValues();
         contenedor.put("nombre", evento.getNombre());
+        if(evento.getCampoExtra1() != null && !evento.getCampoExtra1().equals("")) {
+            contenedor.put("campoExtra1", evento.getCampoExtra1());
+        }
+        if(evento.getCampoExtra2() != null && !evento.getCampoExtra2().equals("")) {
+            contenedor.put("campoExtra2", evento.getCampoExtra2());
+        }
+        if(evento.getCampoExtra3() != null && !evento.getCampoExtra3().equals("")) {
+            contenedor.put("campoExtra3", evento.getCampoExtra3());
+        }
 
-        return (data.insert("evento", null, contenedor))>0;
+        return (data.insert("evento", null, contenedor));
     }
 
     public boolean eliminar(long id){

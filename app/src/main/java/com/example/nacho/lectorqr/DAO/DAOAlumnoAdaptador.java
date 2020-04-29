@@ -53,14 +53,14 @@ public class DAOAlumnoAdaptador extends BaseAdapter {
         }
         alumno = lista.get(position);
         TextView nombre = v.findViewById(R.id.nombre);
-        TextView apellidos = v.findViewById(R.id.apellidos);
-        TextView expediente = v.findViewById(R.id.expediente);
-        TextView dni = v.findViewById(R.id.dni);
+        TextView campoExtra1 = v.findViewById(R.id.campoExtra1);
+        TextView campoExtra2 = v.findViewById(R.id.campoExtra2);
+        TextView campoExtra3 = v.findViewById(R.id.campoExtra3);
 
         nombre.setText(alumno.getNombre());
-        apellidos.setText(alumno.getApellido());
-        expediente.setText(alumno.getNumeroExpediente());
-        dni.setText(alumno.getDni());
+        campoExtra1.setText(alumno.getCampoExtra1());
+        campoExtra2.setText(alumno.getCampoExtra2());
+        campoExtra3.setText(alumno.getCampoExtra3());
 
         return v;
     }

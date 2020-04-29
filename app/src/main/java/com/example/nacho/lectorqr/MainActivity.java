@@ -2,10 +2,12 @@ package com.example.nacho.lectorqr;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -18,7 +20,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.nacho.lectorqr.DAO.AlumnoDAO;
@@ -40,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean elementoSeleccionado = false;
     private View previousView ;
     private int posicionSeleccionado ;
+    private long tiempoParaSalir;
+    private Toast backToast;
 
 
     @Override
@@ -92,13 +98,35 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(final View v) {
 
-                final String[] name = new String[1];
+                final String[] name = new String[1]; //name es un array ya que al modificarse dentro de un eventListener necesita ser final y un String no se podria modificar
                 final EditText input = new EditText(v.getContext());
+                final TextView masCampos = new TextView(v.getContext());
+                final EditText inputExtra1 = new EditText(v.getContext());
+                final String[] campo1 = new String[1];
+                final EditText inputExtra2 = new EditText(v.getContext());
+                final String[] campo2 = new String[1];
+                final EditText inputExtra3 = new EditText(v.getContext());
+                final String[] campo3 = new String[1];
+
+                Context context = v.getContext();
+                LinearLayout layout = new LinearLayout(context);
+                layout.setOrientation(LinearLayout.VERTICAL);
 
                 input.setHint("Nombre del evento");
+                layout.addView(input);
+                masCampos.setTypeface(null, Typeface.BOLD);
+                masCampos.setText("Id de otros campos a añadir al extraer los datos (No es necesario rellenarlos)");
+                layout.addView(masCampos);
+                inputExtra1.setHint("Ejemplo: usuario_valor");
+                layout.addView(inputExtra1);
+                inputExtra2.setHint("Ejemplo: usuario_valor");
+                layout.addView(inputExtra2);
+                inputExtra3.setHint("Ejemplo: usuario_valor");
+                layout.addView(inputExtra3);
+
 
                 AlertDialog.Builder dialogo = new AlertDialog.Builder(MainActivity.this);
-                dialogo.setTitle("Nuevo evento").setView(input);
+                dialogo.setTitle("Nuevo evento").setView(layout);
                 dialogo.setCancelable(false);
 
                 dialogo.setPositiveButton(R.string.guardar, new DialogInterface.OnClickListener() {
@@ -107,7 +135,15 @@ public class MainActivity extends AppCompatActivity {
                             name[0] = input.getText().toString();
                             evento = new Evento(name[0]);
 
-                            evento_dao.insertar(evento);
+                            campo1[0] = (inputExtra1.getText() != null && !inputExtra1.getText().toString().equals("")) ? inputExtra1.getText().toString() : null;
+                            campo2[0] = (inputExtra2.getText() != null && !inputExtra1.getText().toString().equals("")) ? inputExtra2.getText().toString() : null;
+                            campo3[0] = (inputExtra3.getText() != null && !inputExtra1.getText().toString().equals("")) ? inputExtra3.getText().toString() : null;
+
+                            evento.setCampoExtra1(campo1[0]);
+                            evento.setCampoExtra2(campo2[0]);
+                            evento.setCampoExtra3(campo3[0]);
+
+                            evento.setId(evento_dao.insertar(evento));
 
                             Intent intent = new Intent(MainActivity.this, EventActivity.class);
 
@@ -136,6 +172,31 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
+    @Override
+    public void onBackPressed() {
+
+        if(tiempoParaSalir + 2000 > System.currentTimeMillis()){
+            backToast.cancel();
+            MainActivity.this.finish();
+            System.exit(0);
+        }else{
+            backToast = Toast.makeText(getBaseContext(), "Pulsa atrás otra vez para salir", Toast.LENGTH_SHORT);
+            backToast.show();
+        }
+
+        tiempoParaSalir = System.currentTimeMillis();
+    }
+
+    /*@Override
+    public boolean onKeyDown(int keyCode, KeyEvent event)  {
+        if (keyCode == KeyEvent.KEYCODE_BACK ) {
+            // no quiero que haga anda
+            return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
+    }*/
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
