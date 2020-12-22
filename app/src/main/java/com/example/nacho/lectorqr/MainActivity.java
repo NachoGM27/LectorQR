@@ -2,6 +2,7 @@ package com.example.nacho.lectorqr;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,6 +12,7 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -26,7 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.nacho.lectorqr.DAO.AlumnoDAO;
-import com.example.nacho.lectorqr.DAO.DAOAdaptador;
+import com.example.nacho.lectorqr.DAO.DAOEventoAdaptador;
 import com.example.nacho.lectorqr.DAO.EventoDAO;
 
 import java.io.File;
@@ -39,14 +41,15 @@ public class MainActivity extends AppCompatActivity {
     private EventoDAO evento_dao;
     private AlumnoDAO alumno_dao;
     private Evento evento;
-    private DAOAdaptador adaptador;
+    private DAOEventoAdaptador adaptador;
     private ArrayList<Evento> listaEventos;
     private boolean elementoSeleccionado = false;
     private View previousView ;
     private int posicionSeleccionado ;
     private long tiempoParaSalir;
     private Toast backToast;
-
+    private String nombreEvento;
+    private StringBuilder content;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
         alumno_dao = new AlumnoDAO(this);
         listaEventos = evento_dao.verTodos();
 
-        adaptador = new DAOAdaptador(this, listaEventos, evento_dao, alumno_dao);
+        adaptador = new DAOEventoAdaptador(this, listaEventos, evento_dao, alumno_dao);
         final ListView listView = findViewById(R.id.listView);
         listView.setAdapter(adaptador);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -75,13 +78,14 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtras(bundle);
 
                 startActivityForResult(intent, 0);
+                finish();
             }
         });
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 if(previousView != null) {
-                    previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
+                    previousView.setBackgroundColor(Color.TRANSPARENT);
                 }
                 elementoSeleccionado = true;
                 view.setBackgroundColor(Color.parseColor("#cecece"));
@@ -112,16 +116,24 @@ public class MainActivity extends AppCompatActivity {
                 LinearLayout layout = new LinearLayout(context);
                 layout.setOrientation(LinearLayout.VERTICAL);
 
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                params.setMargins(50,10,50,10);
+
                 input.setHint("Nombre del evento");
+                input.setLayoutParams(params);
                 layout.addView(input);
                 masCampos.setTypeface(null, Typeface.BOLD);
                 masCampos.setText("Id de otros campos a añadir al extraer los datos (No es necesario rellenarlos)");
+                masCampos.setLayoutParams(params);
                 layout.addView(masCampos);
                 inputExtra1.setHint("Ejemplo: usuario_valor");
+                inputExtra1.setLayoutParams(params);
                 layout.addView(inputExtra1);
                 inputExtra2.setHint("Ejemplo: usuario_valor");
+                inputExtra2.setLayoutParams(params);
                 layout.addView(inputExtra2);
                 inputExtra3.setHint("Ejemplo: usuario_valor");
+                inputExtra3.setLayoutParams(params);
                 layout.addView(inputExtra3);
 
 
@@ -175,23 +187,29 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        if(previousView != null) {
+            elementoSeleccionado = false;
+            previousView.setBackgroundColor(Color.TRANSPARENT);
+            previousView = null;
+            posicionSeleccionado = -1;
+        }else {
+            if (tiempoParaSalir + 2000 > System.currentTimeMillis()) {
+                backToast.cancel();
+                MainActivity.this.finish();
+                System.exit(0);
+            } else {
+                backToast = Toast.makeText(getBaseContext(), "Pulsa atrás otra vez para salir", Toast.LENGTH_SHORT);
+                backToast.show();
+            }
 
-        if(tiempoParaSalir + 2000 > System.currentTimeMillis()){
-            backToast.cancel();
-            MainActivity.this.finish();
-            System.exit(0);
-        }else{
-            backToast = Toast.makeText(getBaseContext(), "Pulsa atrás otra vez para salir", Toast.LENGTH_SHORT);
-            backToast.show();
+            tiempoParaSalir = System.currentTimeMillis();
         }
-
-        tiempoParaSalir = System.currentTimeMillis();
     }
 
     /*@Override
     public boolean onKeyDown(int keyCode, KeyEvent event)  {
         if (keyCode == KeyEvent.KEYCODE_BACK ) {
-            // no quiero que haga anda
+            // no quiero que haga nada
             return true;
         }
 
@@ -212,7 +230,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.delete:
                 evento = listaEventos.get(posicionSeleccionado);
                 elementoSeleccionado = false;
-                previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
+                previousView.setBackgroundColor(Color.TRANSPARENT);
+                previousView = null;
+                posicionSeleccionado = -1;
 
                 AlertDialog.Builder deletePopUp = new AlertDialog.Builder(this);
                 deletePopUp.setTitle("¿Estás seguro de que quieres borrar este evento?")
@@ -238,23 +258,33 @@ public class MainActivity extends AppCompatActivity {
             case R.id.save:
                 evento = listaEventos.get(posicionSeleccionado);
                 elementoSeleccionado = false;
-                previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
+                previousView.setBackgroundColor(Color.TRANSPARENT);
+                previousView = null;
+                posicionSeleccionado = -1;
 
                 List<Alumno> listaAlumnos = alumno_dao.verTodos(evento.getId());
-                StringBuilder content = new StringBuilder();
+                content = new StringBuilder();
                 for(Alumno aux: listaAlumnos){
                     content.append(aux.getNombre() + "\n");
-                    alumno_dao.eliminar(aux.getId());
                 }
-                saveText(evento.getNombre(), content);
 
-                evento_dao.eliminar(evento.getId());
-                listaEventos=evento_dao.verTodos();
-                adaptador.notifyDataSetChanged();
+                nombreEvento = evento.getNombre();
+                Boolean guardado = saveText();
+
+                if(guardado) {
+                    for(Alumno aux: listaAlumnos){
+                        alumno_dao.eliminar(aux.getId());
+                    }
+                    evento_dao.eliminar(evento.getId());
+                    listaEventos = evento_dao.verTodos();
+                    adaptador.notifyDataSetChanged();
+                }
                 return true;
             case android.R.id.home:
                 elementoSeleccionado = false;
-                previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
+                previousView.setBackgroundColor(Color.TRANSPARENT);
+                previousView = null;
+                posicionSeleccionado = -1;
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -277,31 +307,62 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
-    public void saveText(String nombreEvento, StringBuilder content){
-        if(checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            String fileName = nombreEvento + ".txt";
+    public boolean saveText(){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
 
-            //crear el archivo
-            File directorio = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
+               return startDownloading();
+            } else {
+                String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+                requestPermissions(permissions, 1000);
 
-            //escribir el archivo
-            try {
-                if(!directorio.exists()){
-                    directorio.mkdir();
-                }
-                File file = new File(directorio, fileName);
-                file.createNewFile();
-                FileOutputStream fos = new FileOutputStream(file);
-                fos.write(content.toString().getBytes());
-                fos.close();
-                Toast.makeText(this, "Evento guardado en " + directorio.getAbsolutePath(), Toast.LENGTH_SHORT).show();
-            } catch (Exception e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Error al guardar", Toast.LENGTH_SHORT).show();
+                return false;
             }
         }else{
-            String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
-            requestPermissions(permissions, 101);
+            return startDownloading();
+        }
+    }
+
+    private Boolean startDownloading() {
+        String fileName = nombreEvento + ".txt";
+        //crear el archivo
+        File directorio = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
+
+        //escribir el archivo
+        try {
+            if (!directorio.exists()) {
+                directorio.mkdir();
+            }
+            File file = new File(directorio, fileName);
+            file.createNewFile();
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(content.toString().getBytes());
+            fos.close();
+
+            DownloadManager downloadManager = (DownloadManager) this.getSystemService(DOWNLOAD_SERVICE);
+            downloadManager.addCompletedDownload(file.getName(), "Descargando archivo...", true, "text/plain", file.getAbsolutePath(),file.length(),true);
+
+            Toast.makeText(this, "Evento guardado en " + directorio.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error al guardar", Toast.LENGTH_SHORT).show();
+
+            return false;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch(requestCode){
+            case 1000:{
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    startDownloading();
+                }else{
+                    Toast.makeText(this, "Permiso denegado...", Toast.LENGTH_SHORT).show();
+                }
+            }
         }
     }
 

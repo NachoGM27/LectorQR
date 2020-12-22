@@ -13,7 +13,7 @@ import com.example.nacho.lectorqr.R;
 
 import java.util.ArrayList;
 
-public class DAOAdaptador extends BaseAdapter {
+public class DAOEventoAdaptador extends BaseAdapter {
 
     ArrayList<Evento> lista;
     EventoDAO dao;
@@ -21,7 +21,7 @@ public class DAOAdaptador extends BaseAdapter {
     Evento evento;
     Activity activity;
 
-    public DAOAdaptador(Activity activity, ArrayList<Evento> lista, EventoDAO dao, AlumnoDAO alumnoDAO){
+    public DAOEventoAdaptador(Activity activity, ArrayList<Evento> lista, EventoDAO dao, AlumnoDAO alumnoDAO){
         this.lista = lista;
         this.activity = activity;
         this.dao = dao;

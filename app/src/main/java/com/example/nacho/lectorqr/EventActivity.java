@@ -98,7 +98,7 @@ public class EventActivity extends AppCompatActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 if(previousView != null) {
-                    previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
+                    previousView.setBackgroundColor(Color.TRANSPARENT);
                 }
                 elementoSeleccionado = true;
                 view.setBackgroundColor(Color.parseColor("#cecece"));
@@ -123,13 +123,14 @@ public class EventActivity extends AppCompatActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event)  {
         if(elementoSeleccionado){
-            previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
+            previousView.setBackgroundColor(Color.TRANSPARENT);
             elementoSeleccionado = false;
             return true;
         }else if (keyCode == KeyEvent.KEYCODE_BACK ) {
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
             NavUtils.navigateUpFromSameTask(this);
+            finish();
             return true;
         }
 
@@ -159,71 +160,89 @@ public class EventActivity extends AppCompatActivity {
         //Cogemos la url que nos da el codigo qr
         final String url = barcode.displayValue;
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+        if(url.contains("https://gestion2.urjc.es")) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
 
-                Integer codigo = 0;
-                final StringBuilder resultNombreUsuario = new StringBuilder();
-                final StringBuilder resultCampo1 = new StringBuilder();
-                final StringBuilder resultCampo2 = new StringBuilder();
-                final StringBuilder resultCampo3 = new StringBuilder();
+                    Integer codigo = 0;
+                    final StringBuilder resultNombreUsuario = new StringBuilder();
+                    final StringBuilder resultCampo1 = new StringBuilder();
+                    final StringBuilder resultCampo2 = new StringBuilder();
+                    final StringBuilder resultCampo3 = new StringBuilder();
 
-                //Comprobamos que nos podemos conectar a ella
-                codigo = getStatusConnectionCode(url);
+                    //Comprobamos que nos podemos conectar a ella
+                    codigo = getStatusConnectionCode(url);
 
-                if(codigo == 200){
-                    Document doc = null;
-                    try {
-                        doc = Jsoup.connect(url).userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.2 (KHTML, like Gecko) Chrome/15.0.874.120 Safari/535.2").timeout(100000).get();
-                        Element nombreUsuario = doc.getElementById("usuario_valor");
+                    if (codigo == 200) {
+                        Document doc = null;
+                        try {
+                            doc = Jsoup.connect(url).userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.2 (KHTML, like Gecko) Chrome/15.0.874.120 Safari/535.2").timeout(100000).get();
+                            Element nombreUsuario = doc.getElementById("usuario_valor");
 
-                        if(nombreUsuario.val().trim() == ""){
-                            resultNombreUsuario.append("Nombre de usuario vacio");
-                        }else{
-                            resultNombreUsuario.append(nombreUsuario.val());
+                            if (nombreUsuario.val().trim() == "") {
+                                resultNombreUsuario.append("Nombre de usuario vacio");
+                            } else {
+                                resultNombreUsuario.append(nombreUsuario.val());
+                            }
+
+                            Element campo1;
+                            if (evento.getCampoExtra1() != null && !evento.getCampoExtra1().equals("")) {
+                                campo1 = doc.getElementById(evento.getCampoExtra1());
+                                resultCampo1.append(campo1.val());
+                            } else {
+                                resultCampo1.append("");
+                            }
+                            Element campo2;
+                            if (evento.getCampoExtra2() != null && !evento.getCampoExtra2().equals("")) {
+                                campo2 = doc.getElementById(evento.getCampoExtra2());
+                                resultCampo2.append(campo2.val());
+                            } else {
+                                resultCampo2.append("");
+                            }
+                            Element campo3;
+                            if (evento.getCampoExtra3() != null && !evento.getCampoExtra3().equals("")) {
+                                campo3 = doc.getElementById(evento.getCampoExtra3());
+                                resultCampo3.append(campo3.val());
+                            } else {
+                                resultCampo3.append("");
+                            }
+                        } catch (IOException ex) {
+                            Log.e("HTMLError", "Excepción al obtener el HTML de la página" + ex.getMessage());
                         }
 
-                        Element campo1;
-                        if(evento.getCampoExtra1() != null && !evento.getCampoExtra1().equals("")){
-                            campo1 = doc.getElementById(evento.getCampoExtra1());
-                            resultCampo1.append(campo1.val());
-                        }else{
-                            resultCampo1.append("");
-                        }
-                        Element campo2;
-                        if(evento.getCampoExtra2() != null && !evento.getCampoExtra2().equals("")){
-                            campo2 = doc.getElementById(evento.getCampoExtra2());
-                            resultCampo2.append(campo2.val());
-                        }else{
-                            resultCampo2.append("");
-                        }
-                        Element campo3;
-                        if(evento.getCampoExtra3() != null && !evento.getCampoExtra3().equals("")){
-                            campo3 = doc.getElementById(evento.getCampoExtra3());
-                            resultCampo3.append(campo3.val());
-                        }else{
-                            resultCampo3.append("");
-                        }
-                    } catch (IOException ex) {
-                        Log.e("HTMLError", "Excepción al obtener el HTML de la página" + ex.getMessage());
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Dialog popUp = popUp(resultNombreUsuario.toString(), resultCampo1 != null ? resultCampo1.toString() : null, resultCampo2 != null ? resultCampo2.toString() : null, resultCampo3 != null ? resultCampo3.toString() : null);
+                                popUp.setCanceledOnTouchOutside(false);
+                                popUp.show();
+                            }
+                        });
+
+                    } else {
+                        Log.e("codigoError:", "Codigo de error:" + codigo);
                     }
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Dialog popUp = popUp(resultNombreUsuario.toString(), resultCampo1 != null ? resultCampo1.toString() : null, resultCampo2 != null ? resultCampo2.toString() : null, resultCampo3 != null ? resultCampo3.toString() : null);
-                            popUp.setCanceledOnTouchOutside(false);
-                            popUp.show();
+                }
+            }).start();
+        }else{
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                    this);
+            alertDialogBuilder.setTitle("Error al leer qr");
+
+            // set dialog message
+            alertDialogBuilder
+                    .setMessage("El código QR no es válido")
+                    .setCancelable(false)
+                    .setPositiveButton("Cerrar",new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,int id) {
+                            dialog.dismiss();
                         }
                     });
-
-                }else{
-                    Log.e("codigoError:","Codigo de error:" + codigo);
-                }
-
-            }
-        }).start();
+            AlertDialog alertDialog = alertDialogBuilder.create();
+            alertDialog.show();
+        }
     }
 
     private Integer getStatusConnectionCode(String url) {
@@ -259,14 +278,21 @@ public class EventActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item){
         switch (item.getItemId()){
             case android.R.id.home:
-                Intent intent = new Intent(this, MainActivity.class);
-                startActivity(intent);
-                NavUtils.navigateUpFromSameTask(this);
-                return true;
+                if(elementoSeleccionado){
+                    previousView.setBackgroundColor(Color.TRANSPARENT);
+                    elementoSeleccionado = false;
+                    return true;
+                }else {
+                    Intent intent = new Intent(this, MainActivity.class);
+                    startActivity(intent);
+                    NavUtils.navigateUpFromSameTask(this);
+                    finish();
+                    return true;
+                }
             case R.id.delete:
                 final Alumno alumno = lista.get(posicionSeleccionado);
                 elementoSeleccionado = false;
-                previousView.setBackgroundColor(Color.parseColor("#EAEAEA"));
+                previousView.setBackgroundColor(Color.TRANSPARENT);
 
                 AlertDialog.Builder deletePopUp = new AlertDialog.Builder(this);
                 deletePopUp.setTitle("¿Seguro que quieres borrar este alumno de este evento?").setMessage("Alumno " + alumno.getNombre())

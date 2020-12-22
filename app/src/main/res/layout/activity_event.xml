@@ -22,25 +22,28 @@
 
     <ImageButton
         android:id="@+id/btn_scan_qrcode"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
         android:layout_gravity="bottom|center_horizontal"
         android:layout_marginBottom="30dp"
-        app:srcCompat="@drawable/ic_launcher_background"
-        tools:ignore="VectorDrawableCompat" />
+        android:background="@drawable/qr_scan_button"
+        tools:ignore="VectorDrawableCompat"
+        android:elevation="3dp"
+        android:outlineProvider="bounds"/>
 
     <ListView
         android:id="@+id/listView"
         android:layout_width="wrap_content"
-        android:layout_height="350dp"
+        android:layout_height="match_parent"
         android:layout_marginStart="20dp"
         android:layout_marginLeft="20dp"
         android:layout_marginTop="80dp"
+        android:layout_marginBottom="160dp"
         android:layout_marginEnd="20dp"
         android:layout_marginRight="20dp"
         android:background="@drawable/custom_shape"
         android:choiceMode="singleChoice"
         android:elevation="10dp"
-        android:transcriptMode="alwaysScroll"/>
+        android:transcriptMode="alwaysScroll" />
 
 </android.support.design.widget.CoordinatorLayout>
